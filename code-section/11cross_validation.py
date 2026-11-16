@@ -1,5 +1,34 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
+
+from importlib import import_module
+from torch.utils.data import DataLoader
+import numpy as np
+
+# Numbered filenames require import_module rather than Python from-import syntax.
+_section_01 = import_module('01setup')
+DEVICE = _section_01.DEVICE
+SEED = _section_01.SEED
+set_seed = _section_01.set_seed
+_section_05 = import_module('05rep_tensors')
+DRILL_IDS = _section_05.DRILL_IDS
+reps = _section_05.reps
+_section_07 = import_module('07baselines')
+W = _section_07.W
+Y = _section_07.Y
+YM = _section_07.YM
+get_splits = _section_07.get_splits
+player_ids = _section_07.player_ids
+reps_by_player = _section_07.reps_by_player
+_section_08 = import_module('08dataset_and_batching')
+PlayerDataset = _section_08.PlayerDataset
+collate = _section_08.collate
+fit_scalers = _section_08.fit_scalers
+_section_09 = import_module('09model')
+PlayerModel = _section_09.PlayerModel
+_section_10 = import_module('10training')
+fit = _section_10.fit
+predict = _section_10.predict
 
 # %% [markdown]
 # ## 11. Grouped cross-validation for the neural model

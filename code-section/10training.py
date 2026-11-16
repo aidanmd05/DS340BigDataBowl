@@ -1,5 +1,13 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
+
+from importlib import import_module
+import torch.nn as nn
+import torch
+
+# Numbered filenames require import_module rather than Python from-import syntax.
+_section_01 = import_module('01setup')
+DEVICE = _section_01.DEVICE
 
 # %% [markdown]
 # ## 10. Training

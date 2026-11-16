@@ -1,5 +1,9 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
+
+from torch.utils.data import Dataset
+import numpy as np
+import torch
 
 # %% [markdown]
 # ## 8. Dataset and batching (variable number of reps per player)

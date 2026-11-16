@@ -1,5 +1,5 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
 
 # %% [markdown]
 # ## 1. Setup and configuration
@@ -29,9 +29,9 @@ set_seed(SEED)
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Folder holding the WR-only CSVs (and, for the one-time build, the full competition CSVs).
-# Your earlier notebook read/wrote them in the working directory, hence ".".
+# Resolve local data relative to the repository, regardless of the working directory.
 # On Kaggle: Path("/kaggle/input/nfl-big-data-bowl-2027"); on Colab: a mounted Drive folder.
-DATA_DIR = Path("data")
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 # %%
 # ---------------- Target definition (decided from the audit) ----------------

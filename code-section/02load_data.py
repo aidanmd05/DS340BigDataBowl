@@ -1,5 +1,13 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
+
+from importlib import import_module
+import pandas as pd
+
+# Numbered filenames require import_module rather than Python from-import syntax.
+_section_01 = import_module('01setup')
+DATA_DIR = _section_01.DATA_DIR
+SEP_COL = _section_01.SEP_COL
 
 # %% [markdown]
 # ## 2. Load the data (WR-only files)

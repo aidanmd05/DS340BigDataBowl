@@ -1,5 +1,24 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
+
+from importlib import import_module
+from sklearn.model_selection import KFold
+from sklearn.linear_model import Ridge
+import numpy as np
+import pandas as pd
+from scipy.stats import spearmanr
+
+# Numbered filenames require import_module rather than Python from-import syntax.
+_section_01 = import_module('01setup')
+CFG = _section_01.CFG
+ROUTE_FAMS = _section_01.ROUTE_FAMS
+SEED = _section_01.SEED
+_section_02 = import_module('02load_data')
+results = _section_02.results
+_section_05 = import_module('05rep_tensors')
+reps = _section_05.reps
+_section_06 = import_module('06targets')
+targets = _section_06.targets
 
 # %% [markdown]
 # ## 7. Baselines A and B with the evaluation harness (your milestone)

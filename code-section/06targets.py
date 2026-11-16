@@ -1,5 +1,19 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
+
+from importlib import import_module
+import math
+import numpy as np
+
+# Numbered filenames require import_module rather than Python from-import syntax.
+_section_01 = import_module('01setup')
+CFG = _section_01.CFG
+ROUTE_FAMILY = _section_01.ROUTE_FAMILY
+ROUTE_FAMS = _section_01.ROUTE_FAMS
+SEP_COL = _section_01.SEP_COL
+_section_02 = import_module('02load_data')
+play = _section_02.play
+wr_ids = _section_02.wr_ids
 
 # %% [markdown]
 # ## 6. Targets from `player_play.csv`

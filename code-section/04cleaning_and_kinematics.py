@@ -1,5 +1,21 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
+
+from importlib import import_module
+from pipeline_display import display
+import numpy as np
+
+# Numbered filenames require import_module rather than Python from-import syntax.
+_section_01 = import_module('01setup')
+EXCLUDE_BASE = _section_01.EXCLUDE_BASE
+FAMILY_OF_DRILL_TYPE = _section_01.FAMILY_OF_DRILL_TYPE
+_section_03 = import_module('03data_audit')
+KEYS = _section_03.KEYS
+parse_drill = _section_03.parse_drill
+per = _section_03.per
+trk_player = _section_03.trk_player
+usable = _section_03.usable
+usable_table = _section_03.usable_table
 
 # %% [markdown]
 # ## 4. Cleaning and kinematics

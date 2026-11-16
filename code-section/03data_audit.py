@@ -1,5 +1,25 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
+
+from importlib import import_module
+from pipeline_display import display
+import numpy as np
+import pandas as pd
+
+# Numbered filenames require import_module rather than Python from-import syntax.
+_section_01 = import_module('01setup')
+EXCLUDE_BASE = _section_01.EXCLUDE_BASE
+FAMILY_OF_DRILL_TYPE = _section_01.FAMILY_OF_DRILL_TYPE
+MIN_ROUTES = _section_01.MIN_ROUTES
+MIN_ROUTE_REPS = _section_01.MIN_ROUTE_REPS
+ROUTE_FAMILY = _section_01.ROUTE_FAMILY
+ROUTE_FAMS = _section_01.ROUTE_FAMS
+SEP_COL = _section_01.SEP_COL
+_section_02 = import_module('02load_data')
+wr_ids = _section_02.wr_ids
+wr_only_play = _section_02.wr_only_play
+wr_only_results = _section_02.wr_only_results
+wr_only_trk = _section_02.wr_only_trk
 
 # %% [markdown]
 # ## 3. Data audit (findings so far, and what each one decided)

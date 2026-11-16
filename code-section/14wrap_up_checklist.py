@@ -1,5 +1,5 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
 
 # %% [markdown]
 # ## 14. Wrap-up checklist

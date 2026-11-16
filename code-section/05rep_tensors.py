@@ -1,5 +1,18 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
+
+from importlib import import_module
+import numpy as np
+
+# Numbered filenames require import_module rather than Python from-import syntax.
+_section_01 = import_module('01setup')
+CFG = _section_01.CFG
+FAMILY_ID = _section_01.FAMILY_ID
+FAMILY_OF_DRILL_TYPE = _section_01.FAMILY_OF_DRILL_TYPE
+_section_03 = import_module('03data_audit')
+KEYS = _section_03.KEYS
+_section_04 = import_module('04cleaning_and_kinematics')
+wr_trk = _section_04.wr_trk
 
 # %% [markdown]
 # ## 5. Turn each rep into a fixed-size tensor

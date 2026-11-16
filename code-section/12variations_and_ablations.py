@@ -1,5 +1,18 @@
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Run sections in order with run_sections.py (shared notebook state).
+# Dependencies are imported explicitly; run directly or with run_sections.py.
+
+from importlib import import_module
+import pandas as pd
+
+# Numbered filenames require import_module rather than Python from-import syntax.
+_section_01 = import_module('01setup')
+CFG = _section_01.CFG
+_section_07 = import_module('07baselines')
+Y = _section_07.Y
+YM = _section_07.YM
+score = _section_07.score
+_section_11 = import_module('11cross_validation')
+run_cv = _section_11.run_cv
 
 # %% [markdown]
 # ## 12. Variations and ablations (this is your experiment section)

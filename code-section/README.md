@@ -12,17 +12,27 @@ python code-section/run_sections.py
 python code-section/run_sections.py --through 7
 ```
 
-The runner executes sections in numeric order in one shared namespace, matching
-the notebook. The section files depend on earlier sections; they are not
-standalone modules. You can also execute their cells sequentially in an editor's
-Python interactive session. The runner supplies `display` using `print` for
-notebook table output.
+The runner imports sections in numeric order. Every section explicitly imports its
+own libraries and the variables/functions it needs from earlier sections. Imports
+are cached by Python, so dependencies execute once per process. Importing a data
+section runs its top-level loading/audit work; neural training and experiments
+still require the existing explicit calls described in the TODOs.
 
-`01setup.py` now uses the refactored notebook's configuration, while keeping the
-existing `DATA_DIR = Path("data")` setting. Paths are relative to the working
+You can also run a section directly, for example:
+
+```sh
+python code-section/02load_data.py
+```
+
+The existing numbered filenames are retained. Because Python's `from ... import`
+syntax cannot use names starting with digits, sections use `import_module` and
+explicit named bindings for their dependencies. Library imports are local to each
+section. `pipeline_display.py` provides plain-text output for audit tables.
+
+`DATA_DIR` resolves to the repository's `data` folder independently of the working
 directory. Install the project requirements before running. Existing scaffold
 TODOs and VERIFY comments remain, including unfinished baseline features and
-neural experiment calls; splitting the notebook does not complete those tasks.
+neural experiment calls.
 
 ## File order
 
