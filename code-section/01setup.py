@@ -1,14 +1,7 @@
-# Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
-# Dependencies are imported explicitly; run directly or with run_sections.py.
-
-# %% [markdown]
 # ## 1. Setup and configuration
 #
-# Keep every tunable value here so the ablations in section 12 are just different configs. Everything that other sections treat as a decision (target definition, route families, drill scope, channel sets) is defined **once** in this section. Do not redefine `ROUTE_FAMILY`, `ROUTE_FAMS` or `SEP_COL` in later cells.
-#
-# The course runs on Colab, so install anything missing in a separate cell; torch, sklearn, pandas and scipy are normally preinstalled.
+# Keep tunable values here. Everything that other sections treat as a decision (target definition, route families, drill scope, channel sets) is defined once in this section. 
 
-# %%
 import random, math, itertools, json
 from pathlib import Path
 import numpy as np
@@ -28,18 +21,12 @@ set_seed(SEED)
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Folder holding the WR-only CSVs (and, for the one-time build, the full competition CSVs).
-# Resolve local data relative to the repository, regardless of the working directory.
-# On Kaggle: Path("/kaggle/input/nfl-big-data-bowl-2027"); on Colab: a mounted Drive folder.
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
-# %%
-# ---------------- Target definition (decided from the audit) ----------------
 SEP_COL = "separation_at_pass_forward"
 
 MIN_ROUTES = 20        # min routes WITH a separation value per family to get a target (a COUNT, not a distance).
-                       # Split-half reliability plateaus around 20; run 15 and 25 as sensitivity checks.
-MIN_ROUTE_REPS = 3     # min route-drill reps per WR (run 6 as a sensitivity check)
+MIN_ROUTE_REPS = 3     # min route-drill reps per WR
 
 # Single source of truth for route families.
 # FLAT and SCREEN are left out on purpose: they happen at or behind the line, so separation
@@ -52,17 +39,16 @@ ROUTE_FAMILY = {
 ROUTE_FAMS = sorted(set(ROUTE_FAMILY.values()))
 
 # ---------------- Combine drill scope ----------------
-# drill_type -> encoder family. 3-cone / shuttle TRACKING is too sparse (about 0.3 reps per WR):
-# their official times go into feature set A instead.
+# drill_type -> encoder family. 3-cone / shuttle TRACKING is too sparse
 FAMILY_OF_DRILL_TYPE = {"FORTY_YARD_DASH": "sprint", "SKILL_DRILLS_WR": "route"}
 FAMILIES = sorted(set(FAMILY_OF_DRILL_TYPE.values()))
 FAMILY_ID = {f: i for i, f in enumerate(FAMILIES)}
 
-# Left out of v1: ball-skill drills (not real routes) and a drill run in only one draft class (CIRCUS = 2025 only).
-EXCLUDE_BASE = {"CIRCUS", "GAUNTLET_DRILL", "OVER_SHOULDER_ADJUST"}
+# Left out of v1: ball-skill drills (not real routes)
+EXCLUDE_BASE = {"GAUNTLET_DRILL", "OVER_SHOULDER_ADJUST"}
 
-# ---------------- Channel sets (this is the ablation in section 12) ----------------
-# All of these columns are created by add_kinematics() in section 4.
+# ---------------- Channel sets (these is the variable options in section 12) ----------------
+# Derived channels are created in section 4; `s` and `a` come from the raw tracking data.
 CHANNEL_SETS = {
     "derived":   ["speed", "acc_tan", "acc_cent"],            # default: signed, physically meaningful
     "derived+a": ["speed", "acc_tan", "acc_cent", "a"],       # plus the sensor's total acceleration
@@ -85,4 +71,5 @@ CFG = dict(
     epochs = 200, patience = 20, batch_size = 16,
     n_folds = 5, n_seeds = 3,
 )
-print(DEVICE, "| channels:", CFG["channels"])
+if __name__ == "__main__":
+    print(DEVICE, "| channels:", CFG["channels"])
