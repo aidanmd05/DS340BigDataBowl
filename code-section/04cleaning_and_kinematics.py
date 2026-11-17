@@ -1,3 +1,4 @@
+# [AI-SCAFFOLD] Pipeline fixes implemented with AI assistance; include in course disclosure.
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
 # Dependencies are imported explicitly; run directly or with run_sections.py.
 
@@ -71,23 +72,31 @@ QC = dict(min_frames=15,       # at 10 Hz, 15 frames = 1.5 s: shorter than any r
           max_gap_s=0.5,       # larger time gap inside an attempt = dropped frames
           max_speed=12.0)      # yd/s; the fastest 40-yard dashes are about 10-11 yd/s  (TODO: tune)
 
-def attempt_qc(d, qc=QC):
+def attempt_qc(d, qc=QC, channels=None):
     a = (d.groupby(KEYS)
          .agg(drill_type=("drill_type", "first"), n_frames=("time", "count"), peak_speed=("s", "max"),
               max_gap=("dt_raw", "max"), n_nan=("s", lambda x: int(x.isna().sum())))
          .reset_index())
+    channels = channels or ["speed", "acc_tan", "acc_cent", "a", "turn", "dir_sin", "dir_cos"]
+    checks = d.assign(_invalid=~np.isfinite(d[channels].to_numpy()).all(axis=1),
+                      _duplicate=d.duplicated(KEYS + ["time"], keep=False),
+                      _missing_time=d["time"].isna())
+    extra = checks.groupby(KEYS)[["_invalid", "_duplicate", "_missing_time"]].any().reset_index()
+    a = a.merge(extra, on=KEYS, validate="one_to_one")
+    a["bad_time"] = a["_duplicate"] | a["_missing_time"]
+    a["bad_channels"] = a["_invalid"]
     a["bad_short"] = a["n_frames"] < qc["min_frames"]
     a["bad_gap"]   = a["max_gap"] > qc["max_gap_s"]
     a["bad_speed"] = a["peak_speed"] > qc["max_speed"]
     a["bad_nan"]   = a["n_nan"] > 0
-    a["bad"] = a[["bad_short", "bad_gap", "bad_speed", "bad_nan"]].any(axis=1)
+    a["bad"] = a[["bad_short", "bad_gap", "bad_speed", "bad_nan", "bad_time", "bad_channels"]].any(axis=1)
     return a
 
 qc_tbl = attempt_qc(trk_k)
 print("Distributions by drill type:")
 display(qc_tbl.groupby("drill_type")[["n_frames", "peak_speed", "max_gap"]]
         .quantile([0.0, 0.01, 0.5, 0.99, 1.0]).round(2))
-print("Flags:", qc_tbl[["bad_short", "bad_gap", "bad_speed", "bad_nan", "bad"]].sum().to_dict())
+print("Flags:", qc_tbl[["bad_short", "bad_gap", "bad_speed", "bad_nan", "bad_time", "bad_channels", "bad"]].sum().to_dict())
 print("Attempts flagged by drill type:", qc_tbl.groupby("drill_type")["bad"].sum().to_dict())
 
 bad_keys = qc_tbl.loc[qc_tbl["bad"], KEYS].assign(_bad=True)

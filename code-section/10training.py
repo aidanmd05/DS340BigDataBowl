@@ -1,3 +1,4 @@
+# [AI-SCAFFOLD] Pipeline fixes implemented with AI assistance; include in course disclosure.
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
 # Dependencies are imported explicitly; run directly or with run_sections.py.
 
@@ -34,12 +35,15 @@ def predict(model, dl):
 @torch.no_grad()
 def eval_loss(model, dl):
     model.eval()
-    tot, n = 0.0, 0
+    numerator, denominator = 0.0, 0.0
     for b in dl:
         b = to_dev(b)
-        tot += masked_mse(model(b), b["y"], b["ym"], b["w"]).item() * len(b["y"])
-        n += len(b["y"])
-    return tot / max(n, 1)
+        weights = b["ym"] * b["w"]
+        numerator += (((model(b) - b["y"]) ** 2) * weights).sum().item()
+        denominator += weights.sum().item()
+    if denominator == 0:
+        raise ValueError("Validation set has no valid target weights")
+    return numerator / denominator
 
 def fit(model, train_dl, val_dl, cfg):
     """[AI-SCAFFOLD] AdamW + early stopping on the inner validation loss; restores the best weights."""
@@ -55,6 +59,8 @@ def fit(model, train_dl, val_dl, cfg):
             nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
         v = eval_loss(model, val_dl)
+        if not torch.isfinite(torch.tensor(v)):
+            raise ValueError("Nonfinite validation loss")
         if v < best - 1e-5:
             best, bad = v, 0
             best_state = {k: t.detach().clone() for k, t in model.state_dict().items()}

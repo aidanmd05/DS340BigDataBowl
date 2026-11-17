@@ -1,38 +1,96 @@
-# Notebook sections
+# Code-section pipeline
 
-These files follow the numbered sections in
-`legacy-code/bdb_wr_route_scaffold_refactored.ipynb`. Markdown is preserved as
-comments, and `# %%` markers separate the original cells. The original notebook
-is unchanged. Section 14 contains only checklist comments.
+Python 3.9+ is supported. Install the direct runtime dependencies in an isolated environment:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+```
 
 Run from the repository root:
 
 ```sh
-python code-section/run_sections.py
-python code-section/run_sections.py --through 7
+# Load, audit, clean, and build inputs without starting training.
+.venv/bin/python code-section/run_sections.py --through 7
+
+# Five-fold baselines: mean, A, B, draft-only, and A + draft pick.
+.venv/bin/python code-section/run_sections.py --evaluate baselines --output outputs/baselines
+
+# Main comparison adds sequence-only C and C + A, with three seeds by default.
+.venv/bin/python code-section/run_sections.py --evaluate neural --output outputs/neural
+
+# Fast end-to-end check of pooling and drill-family variants; not final results.
+.venv/bin/python code-section/run_sections.py --evaluate ablations --folds 2 --epochs 2 --seeds 1 --bootstrap 20 --output outputs/smoke
+
+# Secondary generalization check; pools predictions across held-out draft classes.
+.venv/bin/python code-section/run_sections.py --evaluate baselines --mode draft_class --output outputs/draft_classes
+
+# Focused correctness checks (requires local data).
+.venv/bin/python -m unittest discover -s tests -v
 ```
 
-The runner imports sections in numeric order. Every section explicitly imports its
-own libraries and the variables/functions it needs from earlier sections. Imports
-are cached by Python, so dependencies execute once per process. Importing a data
-section runs its top-level loading/audit work; neural training and experiments
-still require the existing explicit calls described in the TODOs.
+Use a fresh output directory for each evaluation. `--evaluate ablations` matches
+**every model's cohort** to players with both sprint and route reps, then compares
+mean/max/weighted/attention pooling and route-only/sprint-only inputs. Main
+comparisons retain all eligible players. Each experiment uses identical outer
+folds, inner validation players, seeds, and fold-specific target values.
 
-You can also run a section directly, for example:
+`evaluation.py --help` lists flags including `--min-routes` (15/20/25 sensitivity),
+`--min-route-reps`, `--timesteps`, `--channels`, `--epochs`, and `--seeds`.
+Each invocation rebuilds reps, targets, the cohort, and splits from its configuration;
+changing an imported `CFG` alone does not update notebook-style module globals.
+Sections 11 and 12 expose Python wrappers around the same runner.
 
-```sh
-python code-section/02load_data.py
-```
+## Data and evaluation contract
 
-The existing numbered filenames are retained. Because Python's `from ... import`
-syntax cannot use names starting with digits, sections use `import_module` and
-explicit named bindings for their dependencies. Library imports are local to each
-section. `pipeline_display.py` provides plain-text output for audit tables.
+WR extracts live in `data/`. `games.csv` must be in `data/` or
+`nfl-big-data-bowl-2027/`; its verified `season_type == "REG"` mapping filters the
+outcomes before audit or training. Unknown game IDs and missing columns fail early.
+Player eligibility requires at least three **route-drill** reps and at least one
+route-family target with 20 finite separation observations by default. Sprint reps
+do not count toward the route threshold.
 
-`DATA_DIR` resolves to the repository's `data` folder independently of the working
-directory. Install the project requirements before running. Existing scaffold
-TODOs and VERIFY comments remain, including unfinished baseline features and
-neural experiment calls.
+Targets are mean separation residuals after subtracting route-type means. Those
+means are fitted on **inner-training players only** and shared across models in
+that fold. An unseen training route type uses the training mean for its family;
+an entirely absent training family fails explicitly. The exploratory audit's
+all-player route adjustment is never passed to evaluation. Raw section-6 targets
+establish eligibility only.
+
+Ridge models fit on outer-training players. Neural models fit on inner-training
+players and early-stop on inner-validation players, with no outer-test access.
+Imputation, missingness flags and scaling are fitted on each model's training
+partition. Baselines use unweighted Ridge; neural loss uses square-root route-count
+weights. Metrics are unweighted player-level Spearman and R². Bootstrap intervals
+resample players with fixed OOF predictions, including paired differences versus A;
+they do not estimate uncertainty from retraining or selecting experiments. Seed
+scores are saved separately. Use inner validation for model selection; exploratory
+OOF ablation comparisons are not a new independent final test.
+
+QC rejects short/gapped attempts, impossible peak speeds, invalid timestamps and
+nonfinite kinematic channels. Reps are sorted and interpolated in actual elapsed
+time; the last channel is duration in seconds. Route reps retain their moving
+interval, while sprint rollout ends when speed falls below half the peak. Automatic
+route-break/catch alignment and break-retention features remain deferred until
+validated against labeled examples. Coverage/cushion adjustment and shrinkage are
+also not applied.
+
+## Outputs
+
+Each run writes resolved configuration, data hashes, software versions, cohort and
+player folds; training preprocessing and route adjustments; per-model OOF CSVs;
+neural weights, per-seed predictions and scores; metrics with paired player-bootstrap
+95% intervals; residual tables and diagnostic/comparison plots; and sampled rep
+traces. Weighted/attention runs also save held-out per-rep pooling weights.
+Weights are shared across route outputs, and are descriptive rather than causal.
+Fold checkpoints retain completed predictions if a later fold fails; automatic
+resume is not implemented.
+
+Numbered filenames and `# %%` cell markers remain available for notebook-style
+exploration. `run_sections.py` without `--evaluate` imports them in order and does
+not launch experiments. The source notebooks in `legacy-code/` are unchanged.
+Existing personal audit and trace-plot additions are preserved. AI-assisted code is
+marked `[AI-SCAFFOLD]`; update the course disclosure to include these changes.
 
 ## File order
 

@@ -18,6 +18,7 @@ SEP_COL = _section_01.SEP_COL
 _section_02 = import_module('02load_data')
 wr_ids = _section_02.wr_ids
 wr_only_play = _section_02.wr_only_play
+wr_only_players = _section_02.wr_only_players
 wr_only_results = _section_02.wr_only_results
 wr_only_trk = _section_02.wr_only_trk
 
@@ -149,6 +150,7 @@ def usable_table(att, per, min_routes=None, min_reps=None):
     forty_reps = att[att["drill_type"] == "FORTY_YARD_DASH"].groupby("nfl_id").size().rename("forty_reps")
     fams = list(per.columns)
     tab = (pd.DataFrame(index=sorted(wr_ids))
+           .join(wr_only_players.set_index("nfl_id")[["display_name"]])
            .join(wr_only_results.set_index("nfl_id")[["draft_year"]])
            .join(route_reps).join(forty_reps).join(per))
     fill_cols = ["route_reps", "forty_reps"] + fams
@@ -167,7 +169,7 @@ def usable_table(att, per, min_routes=None, min_reps=None):
 
 tab, usable = usable_table(wr_attempts, per)
 print("\nDropped WRs and why:")
-display(tab[~tab.index.isin(usable.index)][["draft_year", "route_reps", "forty_reps"] + ROUTE_FAMS])
+display(tab[~tab.index.isin(usable.index)][["display_name", "draft_year", "route_reps", "forty_reps"] + ROUTE_FAMS])
 # Sensitivity: usable_table(wr_attempts, per, min_routes=15) and (..., min_routes=25, min_reps=6)
 
 # %%

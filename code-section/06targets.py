@@ -1,3 +1,4 @@
+# [AI-SCAFFOLD] Pipeline fixes implemented with AI assistance; include in course disclosure.
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
 # Dependencies are imported explicitly; run directly or with run_sections.py.
 
@@ -30,15 +31,24 @@ wr_ids = _section_02.wr_ids
 # %%
 # ROUTE_FAMILY, ROUTE_FAMS and SEP_COL are defined once in section 1.
 
-def build_targets(play_df, wr_ids):
+def build_targets(play_df, wr_ids, cfg=None, route_means=None):
     """[AI-SCAFFOLD] Returns dict nfl_id -> (y, ym, w), each of length K = len(ROUTE_FAMS)."""
+    cfg = CFG if cfg is None else cfg
     p = play_df[play_df["nfl_id"].isin(wr_ids)].dropna(subset=["route_ran", SEP_COL]).copy()
+    p = p[np.isfinite(p[SEP_COL])].copy()
     p["fam"] = p["route_ran"].map(ROUTE_FAMILY)
     unmapped = p.loc[p["fam"].isna(), "route_ran"].unique()
     if len(unmapped):
         print("Routes left out of every family (expected: FLAT, SCREEN):", list(unmapped))
     p = p.dropna(subset=["fam"])
-    # TODO (optional): replace SEP_COL by a residual after adjusting for coverage and cushion.
+    # None means raw targets, used only to establish eligibility before folds exist.
+    # Evaluation supplies route means fitted on training-player outcomes only.
+    if route_means is not None:
+        expected = p["route_ran"].map(route_means)
+        if expected.isna().any():
+            raise ValueError("Training outcomes do not cover every evaluated route type")
+        p[SEP_COL] = p[SEP_COL] - expected
+
     out = {}
     for pid, g in p.groupby("nfl_id"):
         y = np.zeros(len(ROUTE_FAMS), dtype=np.float32)
@@ -46,12 +56,14 @@ def build_targets(play_df, wr_ids):
         w = np.zeros(len(ROUTE_FAMS), dtype=np.float32)
         for k, fam in enumerate(ROUTE_FAMS):
             gg = g[g["fam"] == fam]
-            if len(gg) >= CFG["min_routes_per_family"]:
-                y[k], ym[k], w[k] = gg[SEP_COL].mean(), 1.0, math.sqrt(len(gg))   # TODO: shrinkage
+            if len(gg) >= cfg["min_routes_per_family"]:
+                y[k], ym[k], w[k] = gg[SEP_COL].mean(), 1.0, math.sqrt(len(gg))   # sqrt-count reliability weight; shrinkage is not applied
         if ym.sum() > 0:
             out[pid] = (y, ym, w)
     return out
 
+# Raw targets here establish eligibility only. evaluation.py rebuilds adjusted
+# targets for each fold from training-player route means.
 # wr_ids comes from section 2
 targets = build_targets(play, wr_ids)
 print(len(targets), "WRs with at least one qualifying route family")

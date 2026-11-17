@@ -1,3 +1,4 @@
+# [AI-SCAFFOLD] Pipeline fixes implemented with AI assistance; include in course disclosure.
 # Extracted from legacy-code/bdb_wr_route_scaffold_refactored.ipynb.
 # Dependencies are imported explicitly; run directly or with run_sections.py.
 
@@ -36,13 +37,15 @@ targets = _section_06.targets
 # If A or B matches the neural model, that is a result worth reporting.
 
 # %%
-def make_player_table(reps, targets, results):
+def make_player_table(reps, targets, results=None, cfg=None):
     """[AI-SCAFFOLD] One entry per WR that has targets and >= min_reps_per_player reps."""
+    cfg = CFG if cfg is None else cfg
+    route_id = _section_01.FAMILY_ID["route"]
     by_player = {}
     for r in reps:
         by_player.setdefault(r["nfl_id"], []).append(r)
     ids = [pid for pid in targets
-           if len(by_player.get(pid, [])) >= CFG["min_reps_per_player"]]
+           if sum(r["family_id"] == route_id for r in by_player.get(pid, [])) >= cfg["min_reps_per_player"]]
     return ids, by_player
 
 player_ids, reps_by_player = make_player_table(reps, targets, results)
@@ -62,41 +65,33 @@ def get_splits(n, mode="kfold", seed=SEED):
             yield train, test
 
 def score(pred, Y, YM, W=None):
-    """Spearman and R^2 per route family, using only players with a target for that family."""
+    """Strict OOF metrics; undefined correlations/R² are explicitly NaN."""
+    if pred.shape != Y.shape or YM.shape != Y.shape:
+        raise ValueError("Prediction, target and mask shapes must match")
+    if not np.isfinite(pred[YM > 0]).all() or not np.isfinite(Y[YM > 0]).all():
+        raise ValueError("Missing or nonfinite predictions/targets for eligible players")
     rows = []
     for k, fam in enumerate(ROUTE_FAMS):
         m = YM[:, k] > 0
-        if m.sum() < 5:
-            continue
-        rho = spearmanr(pred[m, k], Y[m, k]).correlation
-        ss_res = ((Y[m, k] - pred[m, k]) ** 2).sum()
-        ss_tot = ((Y[m, k] - Y[m, k].mean()) ** 2).sum()
-        rows.append(dict(family=fam, n=int(m.sum()), spearman=rho, r2=1 - ss_res / ss_tot))
+        y, p = Y[m, k], pred[m, k]
+        rho = (float(spearmanr(p, y).statistic) if len(y) >= 2
+               and np.ptp(y) > 0 and np.ptp(p) > 0 else np.nan)
+        ss_tot = ((y - y.mean()) ** 2).sum() if len(y) else 0
+        rows.append(dict(family=fam, n=int(m.sum()), spearman=rho,
+                         r2=float(1 - ((y - p) ** 2).sum() / ss_tot) if ss_tot > 0 else np.nan))
     return pd.DataFrame(rows)
 
 def ridge_oof(X, Y, YM, mode="kfold", alpha=10.0):
-    """Out-of-fold predictions from per-family ridge. X: (n_players, n_features)."""
+    """Compatibility helper; fold-local imputation and scaling, strict target checks.
+
+    For route-adjusted targets use evaluation.py, which rebuilds targets within folds.
+    """
+    from evaluation import ridge_predict
     oof = np.full_like(Y, np.nan)
     for tr, te in get_splits(len(X), mode):
-        mu, sd = X[tr].mean(0), X[tr].std(0) + 1e-8        # scale with TRAIN stats only
-        for k in range(Y.shape[1]):
-            trk_ = tr[YM[tr, k] > 0]
-            if len(trk_) < 10:
-                continue
-            m = Ridge(alpha=alpha).fit((X[trk_] - mu) / sd, Y[trk_, k])
-            oof[te, k] = m.predict((X[te] - mu) / sd)
+        oof[te], _ = ridge_predict(X, tr, te, Y, YM, alpha)
     return oof
 
-# --- Feature set A ---------------------------------------------------------------------------
-# TODO: choose official columns from combine_results (VERIFY names) and build X_A, shape (n_players, n_features).
-# Handle opt-outs / missing values (e.g. impute with TRAIN medians inside each fold, plus a missing flag).
-# X_A = results.set_index("nfl_id").loc[player_ids, [...]].to_numpy()
-
-# --- Feature set B ---------------------------------------------------------------------------
-# TODO: per rep, compute the kinematic summaries, then take the per-player mean (or best rep).
-# X_B = ...
-
-# --- Run and record ---------------------------------------------------------------------------
-# resA = score(ridge_oof(X_A, Y, YM), Y, YM); print(resA)
-# resB = score(ridge_oof(X_B, Y, YM), Y, YM); print(resB)
-# TODO: also run A+draft pick, and the "draft pick only" baseline.
+# Feature construction and model comparisons live in evaluation.py so every model
+# uses identical folds, adjusted targets, and training-only preprocessing.
+# Run: python code-section/run_sections.py --evaluate baselines
