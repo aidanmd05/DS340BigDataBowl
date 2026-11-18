@@ -33,7 +33,7 @@ wr_trk = _section_04.wr_trk
 
 # %%
 def resample(arr, T):
-    """[AI-SCAFFOLD] Linearly resample a (n, C) array to (T, C)."""
+    """Linearly resample a (n, C) array to (T, C)."""
     n = len(arr)
     if n == 1:
         return np.repeat(arr, T, axis=0)
@@ -69,10 +69,10 @@ def build_reps(df, T=None, channels=None):
     if T < 2:
         raise ValueError("T must be at least 2")
     reps = []
-    for (ev, pid), rep in df.groupby(KEYS):
+    for (event_id, nfl_id), rep in df.groupby(KEYS):
         rep = rep.sort_values("time")
         if rep["time"].isna().any() or rep["time"].duplicated().any():
-            raise ValueError(f"Invalid timestamps in attempt {ev}, player {pid}")
+            raise ValueError(f"Invalid timestamps in attempt {event_id}, player {nfl_id}")
         dt_type = rep["drill_type"].iloc[0]
         family = FAMILY_OF_DRILL_TYPE.get(dt_type)
         if family is None:
@@ -85,16 +85,17 @@ def build_reps(df, T=None, channels=None):
         times = (rep["time"].iloc[a:b] - rep["time"].iloc[a]).dt.total_seconds().to_numpy()
         duration = float(times[-1])
         if duration <= 0 or not np.isfinite(arr).all():
-            raise ValueError(f"Invalid segment in attempt {ev}, player {pid}")
+            raise ValueError(f"Invalid segment in attempt {event_id}, player {nfl_id}")
         x = np.stack([np.interp(np.linspace(0, duration, T), times, arr[:, c])
                       for c in range(arr.shape[1])], axis=1)
         x = np.concatenate([x, np.full((T, 1), duration)], axis=1)   # constant duration channel
-        reps.append(dict(x=x.astype(np.float32), event_id=ev, nfl_id=pid, draft_year=rep["draft_year"].iloc[0],
+        reps.append(dict(x=x.astype(np.float32), event_id=event_id, nfl_id=nfl_id, draft_year=rep["draft_year"].iloc[0],
                          drill_id=DRILL_IDS[rep["drill_name"].iloc[0]], family_id=FAMILY_ID[family]))
     return reps
 
 reps = build_reps(wr_trk)
-print(len(reps), "reps for", len({r["nfl_id"] for r in reps}), "WRs")
+if __name__ == "__main__":
+    print(len(reps), "reps for", len({r["nfl_id"] for r in reps}), "WRs")
 
 
 def plot_reps_per_family(rep_list, channels=None, n_per_family=6, seed=SEED):
@@ -138,6 +139,12 @@ def plot_reps_per_family(rep_list, channels=None, n_per_family=6, seed=SEED):
     fig.suptitle("Resampled Combine reps by drill family")
     fig.tight_layout()
     return fig
+
+
+def plot_rep_sanity(rep_list, n_per_family=6):
+    """Compatibility entry point returning the figure and a (families, 1) axes array."""
+    fig = plot_reps_per_family(rep_list, n_per_family=n_per_family)
+    return fig, np.asarray(fig.axes, dtype=object).reshape(-1, 1)
 
 
 if __name__ == "__main__":

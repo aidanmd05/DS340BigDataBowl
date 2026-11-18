@@ -16,8 +16,7 @@ _section_02 = import_module('02load_data')
 play = _section_02.play
 wr_ids = _section_02.wr_ids
 
-# %% [markdown]
-# ## 6. Targets from `player_play.csv`
+#  6. Targets from `player_play.csv`
 #
 # Goal: one number per (player, route family): average **separation at pass forward** on routes of that family.
 #
@@ -28,8 +27,7 @@ wr_ids = _section_02.wr_ids
 # - **Mask.** If a player has no qualifying routes in a family, that target is missing: store `ym = 0` so the loss ignores it.
 # - Only use **regular-season** rows if the table includes preseason ids (VERIFY how to filter).
 
-# %%
-# ROUTE_FAMILY, ROUTE_FAMS and SEP_COL are defined once in section 1.
+# ROUTE_FAMILY, ROUTE_FAMS and SEP_COL are defined in section 1.
 
 def build_targets(play_df, wr_ids, cfg=None, route_means=None):
     """[AI-SCAFFOLD] Returns dict nfl_id -> (y, ym, w), each of length K = len(ROUTE_FAMS)."""
@@ -38,7 +36,7 @@ def build_targets(play_df, wr_ids, cfg=None, route_means=None):
     p = p[np.isfinite(p[SEP_COL])].copy()
     p["fam"] = p["route_ran"].map(ROUTE_FAMILY)
     unmapped = p.loc[p["fam"].isna(), "route_ran"].unique()
-    if len(unmapped):
+    if len(unmapped) and __name__ == "__main__":
         print("Routes left out of every family (expected: FLAT, SCREEN):", list(unmapped))
     p = p.dropna(subset=["fam"])
     # None means raw targets, used only to establish eligibility before folds exist.
@@ -53,7 +51,7 @@ def build_targets(play_df, wr_ids, cfg=None, route_means=None):
     for pid, g in p.groupby("nfl_id"):
         y = np.zeros(len(ROUTE_FAMS), dtype=np.float32)
         ym = np.zeros(len(ROUTE_FAMS), dtype=np.float32)
-        w = np.zeros(len(ROUTE_FAMS), dtype=np.float32)
+        w = np.zeros(len(ROUTE_FAMS), dtype=np.float32) # added weight to give high route recievers more weight in training
         for k, fam in enumerate(ROUTE_FAMS):
             gg = g[g["fam"] == fam]
             if len(gg) >= cfg["min_routes_per_family"]:
@@ -66,4 +64,5 @@ def build_targets(play_df, wr_ids, cfg=None, route_means=None):
 # targets for each fold from training-player route means.
 # wr_ids comes from section 2
 targets = build_targets(play, wr_ids)
-print(len(targets), "WRs with at least one qualifying route family")
+if __name__ == "__main__":
+    print(len(targets), "WRs with at least one qualifying route family")
