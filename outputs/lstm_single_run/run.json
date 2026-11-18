@@ -1,0 +1,81 @@
+{
+  "seed": 0,
+  "split_sizes": {
+    "train": 64,
+    "validation": 21,
+    "test": 21
+  },
+  "best_epoch": 51,
+  "epochs_run": 66,
+  "best_validation_loss": 0.8529067635536194,
+  "config": {
+    "T": 100,
+    "channels": [
+      "speed",
+      "acc_tan",
+      "acc_cent"
+    ],
+    "min_routes_per_family": 20,
+    "min_reps_per_player": 3,
+    "hidden": 32,
+    "drill_dim": 4,
+    "pool": "mean",
+    "per_family_encoders": false,
+    "use_attrs": false,
+    "dropout": 0.3,
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "epochs": 100,
+    "patience": 15,
+    "batch_size": 16,
+    "n_folds": 5,
+    "n_seeds": 3
+  },
+  "device": "cpu",
+  "baseline": "Per-output arithmetic mean of observed training targets in original units",
+  "loss": "Equal-output masked MSE on train-standardized separation z and log1p counts",
+  "context_reference": "Training players only, all their regular-season seasons; leave-one-player-out for each training target",
+  "target_scaler": "Fitted on observed training labels only",
+  "input_scaler": "Fitted on training-player reps only",
+  "count_caveat": "Recorded rookie routes only; no-record players masked; full-season coverage unknown",
+  "interpretation": "One exploratory random-player holdout, not a draft-class or chronological test; no hyperparameter sweep",
+  "prediction_family_order": [
+    "break",
+    "short",
+    "vertical"
+  ],
+  "prediction_metric_order": [
+    "separation_z",
+    "route_count"
+  ],
+  "test_valid_counts": [
+    [
+      13,
+      15
+    ],
+    [
+      10,
+      15
+    ],
+    [
+      13,
+      15
+    ]
+  ],
+  "source_sha256": {
+    "/Users/aidandowner/DS340BigDataBowl/outputs/lstm_inputs/joined_inputs_outcomes.npz": "9a8f6a1f6462b2a6da1c9fa7b36bb1d3086b6c4b0ce1090d30fe7846c1986345",
+    "/Users/aidandowner/DS340BigDataBowl/outputs/lstm_inputs/metadata.json": "a8478a6433dd67045b86cfdbfadd265f76588d17acc314ea227265627cd9e902",
+    "/Users/aidandowner/DS340BigDataBowl/data/wr_only_players.csv": "e2af1e58cb23a31981af5d790bb616945349a49383c5ea107c6e68b3baa47749",
+    "/Users/aidandowner/DS340BigDataBowl/data/wr_only_play.csv": "ef12f54b50c6ba9cff0cfbfbfb647c3aea2a14fdfdb52efbad7b35d1aaf54e1a",
+    "/Users/aidandowner/DS340BigDataBowl/nfl-big-data-bowl-2027/games.csv": "ca33543f6939af4ee393c568c60920c476ba91ddbfbdce5a06578b9492fa11fd",
+    "/Users/aidandowner/DS340BigDataBowl/outputs/rookie_context/metadata.json": "a7fc96156ba258d01ec26b4e3ad356860b3412e9a5aa93f7ebaf700176f39de0",
+    "/Users/aidandowner/DS340BigDataBowl/code-section/train_rookie_single.py": "13db436d9ac5ca7e78b61c8b7f363a9d300a9e649e325c00223ef7ad2564b3b8",
+    "/Users/aidandowner/DS340BigDataBowl/code-section/09model.py": "6fa9e5857d2f534afeab83577c680b41f60d51caddced7dcdefd3d88867d7975",
+    "/Users/aidandowner/DS340BigDataBowl/code-section/prepare_rookie_context.py": "dbd0c7ea85457ec8dfe60a88cc22208107a1a40c923c872e32976fa419755bc3"
+  },
+  "versions": {
+    "torch": "2.8.0",
+    "numpy": "2.0.2",
+    "pandas": "2.3.3"
+  }
+}

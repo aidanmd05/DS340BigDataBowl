@@ -109,6 +109,76 @@ FLAT/SCREEN remain excluded from the existing three family outputs. Combine
 sequence inputs remain in section 5; join the prepared outcomes by `nfl_id`, not
 by array row position. No evaluation/training commands run automatically.
 
+## Join Combine sequences to rookie outcomes (data only)
+
+```sh
+.venv/bin/python code-section/join_rookie_inputs.py
+# Use --output with a fresh directory to repeat the join.
+.venv/bin/python -m unittest discover -s tests -p test_join_rookie_inputs.py -v
+```
+
+This joins section-5 Combine reps to `outputs/rookie_context/rookie_targets.npz`
+by `nfl_id`. It retains players with at least `MIN_ROUTE_REPS` usable route-drill
+reps, regardless of rookie outcome eligibility. Sprint reps are optional and do not
+satisfy the route minimum. Missing performance outcomes remain masked. All prepared outcome labels, metrics, values, counts
+and masks remain intact in the full outcome arrays. The selected first prediction
+outputs are **separation z-score and recorded rookie route count** by family
+(`break`, `short`, `vertical`), stored in `prediction_y` with `prediction_mask`.
+This tensor has shape `(106, 3, 2)`: six predictions per receiver. Counts below 20
+remain valid count targets; separation retains its existing eligibility rule.
+No-record receivers remain masked for counts; a recorded zero in a family is
+valid when other rookie routes establish the player's presence in the dataset.
+`prediction_targets.csv` is the readable version of these chosen outputs.
+
+The current result is **106 receivers, 1,389 reps**, with input shape `(1389, 100, 4)`
+and outcome shape `(106, 15, 5)`. Reps are grouped by player and stored without global
+padding. Offsets and rep-to-player indices link them to the matching outcome row.
+All 43 receivers previously excluded for outcome availability are now retained:
+16 have recorded rookie routes but no eligible performance outputs; 27 have no
+recorded rookie regular-season routes. The report distinguishes these cases.
+`participation_by_route.csv` and the target package add recorded route counts and
+threshold indicators per receiver/output. No-record players have unknown-count
+masks, and below-threshold full-season labels remain unknown because complete
+rookie-season coverage has not been established. Recorded successes are confirmed
+positives. Original performance values, masks and supporting counts are unchanged.
+Use `--overwrite` to regenerate the existing joined outputs explicitly.
+
+See [the joined-data guide](../outputs/lstm_inputs/README.md) for array definitions
+and loading examples. No splits, scaling, loss weighting, model
+training or evaluation are performed. Existing training commands have not been
+switched to these new outcomes.
+
+## First training run with the new outcomes
+
+```sh
+.venv/bin/python code-section/train_rookie_single.py
+```
+
+This is the new-outcome training entry point. It runs one seeded 60/20/20 player
+split (64 train, 21 validation, 21 test), with a shared 32-unit LSTM and mean pooling,
+six family/metric outputs and no official Combine attributes. Maximum 100 epochs,
+validation patience 15, one seed, no hyperparameter sweep or cross-validation.
+Use `--output` with a fresh directory to repeat the run.
+
+The joined full-population descriptive separation labels are **not** passed directly
+to evaluation. Context references are refitted using training players only, with
+each training receiver excluded from his own reference. Validation/test separation
+uses the shared training reference. All available seasons of allowed reference
+players are pooled, so this is a random-player holdout, not a chronological or
+next-draft-class evaluation. Rookie route-count labels remain unchanged.
+
+Count targets use `log1p`; both metrics are standardized by family using observed
+training labels only. Inputs are scaled on training-player reps only. Masked MSE
+balances the six output dimensions; unknown labels never contribute. Count
+predictions are transformed back to raw units and clipped to zero for reporting.
+Training stops by validation loss and restores its best checkpoint before a single
+test evaluation. A training arithmetic-mean predictor is reported for comparison.
+
+Results, named test predictions, learning curves, held-out plots, reference/scaling
+parameters, split membership and checkpoint are in
+[outputs/lstm_single_run/README.md](../outputs/lstm_single_run/README.md).
+The older `--evaluate neural` command below still uses its original target pathway.
+
 ## Data and evaluation contract
 
 WR extracts live in `data/`. `games.csv` must be in `data/` or

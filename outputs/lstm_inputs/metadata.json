@@ -1,0 +1,117 @@
+{
+  "join_key": "nfl_id",
+  "kept_players": 106,
+  "kept_reps": 1389,
+  "roster_players": 106,
+  "excluded_players": 0,
+  "min_route_reps": 3,
+  "outcome_eligibility": "Not required for inclusion; preserve per-metric masks",
+  "players_with_eligible_outcomes": 63,
+  "players_without_eligible_outcomes": 43,
+  "participation_threshold": 20,
+  "participation_population": "Recorded rookie regular-season routes; no complete-season coverage assumption",
+  "full_season_negative_labels_available": false,
+  "output_selection_performed": true,
+  "prediction_y_shape": [
+    106,
+    3,
+    2
+  ],
+  "prediction_output_labels": [
+    "family:break",
+    "family:short",
+    "family:vertical"
+  ],
+  "prediction_metric_names": [
+    "separation_z",
+    "route_count"
+  ],
+  "prediction_valid_counts": [
+    [
+      59,
+      79
+    ],
+    [
+      48,
+      79
+    ],
+    [
+      61,
+      79
+    ]
+  ],
+  "route_count_definition": "All recorded rookie regular-season routes per family, regardless of separation availability; no-record players masked unknown",
+  "scaling_performed": false,
+  "training_performed": false,
+  "evaluation_performed": false,
+  "channels": [
+    "speed",
+    "acc_tan",
+    "acc_cent",
+    "duration"
+  ],
+  "drill_ids": {
+    "COMEBACK": 0,
+    "CURL": 1,
+    "DAGGER": 2,
+    "FORTY_YARD_DASH": 3,
+    "GO": 4,
+    "POST_CORNER": 5,
+    "RED_ZONE_FADE": 6,
+    "SLANT": 7,
+    "SLOT_SAIL": 8,
+    "SLOT_STRIKE": 9,
+    "SPEED_OUT": 10
+  },
+  "family_ids": {
+    "route": 0,
+    "sprint": 1
+  },
+  "x_shape": [
+    1389,
+    100,
+    4
+  ],
+  "y_shape": [
+    106,
+    15,
+    5
+  ],
+  "output_labels": [
+    "route:ANGLE",
+    "route:CORNER",
+    "route:CROSS",
+    "route:FLAT",
+    "route:GO",
+    "route:HITCH",
+    "route:IN",
+    "route:OUT",
+    "route:POST",
+    "route:SCREEN",
+    "route:SLANT",
+    "route:WHEEL",
+    "family:break",
+    "family:short",
+    "family:vertical"
+  ],
+  "metric_names": [
+    "separation_z",
+    "separation_percentile",
+    "target_rate",
+    "expected_target_probability",
+    "target_rate_above_expected"
+  ],
+  "source_sha256": {
+    "/Users/aidandowner/DS340BigDataBowl/outputs/rookie_context/rookie_targets.npz": "878b1a0c7bd419c69627f77838747e2500d8116f64dc486057642636315d4506",
+    "/Users/aidandowner/DS340BigDataBowl/outputs/rookie_context/rookie_routes.csv": "d0de09e54c6fff2f49d350c6e49f17493c486276c933be4a88f6e715577973e0",
+    "/Users/aidandowner/DS340BigDataBowl/outputs/rookie_context/metadata.json": "a7fc96156ba258d01ec26b4e3ad356860b3412e9a5aa93f7ebaf700176f39de0",
+    "/Users/aidandowner/DS340BigDataBowl/code-section/join_rookie_inputs.py": "d74e03a4ea008a6fe53aabb2d53da2ca27c412e1d4177ad2db7c19bd9dc72ce6",
+    "/Users/aidandowner/DS340BigDataBowl/data/wr_only_trk.csv": "b69d5fd4f95b40a5fc6e2645548799b9496f7778963df0105ceff1fb3f6daebf",
+    "/Users/aidandowner/DS340BigDataBowl/data/wr_only_players.csv": "e2af1e58cb23a31981af5d790bb616945349a49383c5ea107c6e68b3baa47749",
+    "/Users/aidandowner/DS340BigDataBowl/code-section/01setup.py": "b218d3075d8d56a187cee9c88ec8d06958987881b50422124974985ebf1cd7f5",
+    "/Users/aidandowner/DS340BigDataBowl/code-section/02load_data.py": "038df5a37726b06ec44ccd46f17cd8f616fd0cfcfb7ce8f0e325099e542d4380",
+    "/Users/aidandowner/DS340BigDataBowl/code-section/03data_audit.py": "a9486bb60a1567e5c5e984df7d7e2bbe0c321ab2fbc88fcbf30b7fa858f63a59",
+    "/Users/aidandowner/DS340BigDataBowl/code-section/04cleaning_and_kinematics.py": "9f4db9234922f15733c61b29e485deae0713338195d1a767c73902fc28f923c5",
+    "/Users/aidandowner/DS340BigDataBowl/code-section/05rep_tensors.py": "12425329863fd0ab61bfa461b96731e914cfa057569f22d95d45a1462ee56b20"
+  }
+}
