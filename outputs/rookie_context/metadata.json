@@ -1,0 +1,47 @@
+{
+  "reference_population": "all regular-season WR cohort routes; all available seasons pooled",
+  "scoring_population": "regular-season routes with season == draft_year",
+  "reference_includes_scored_receivers": true,
+  "evaluation_performed": false,
+  "target_probability": "P(target=True | route, coverage, cushion); context baseline, not player-specific",
+  "percentile": "0-100, hierarchical empirical mixture CDF with midrank ties",
+  "cushion_intervals": "[0,2),[2,4),[4,6),[6,8),[8,10),[10,infinity); unknown separate",
+  "hierarchy": [
+    [
+      "route_ran"
+    ],
+    [
+      "route_ran",
+      "cushion_bucket"
+    ],
+    [
+      "route_ran",
+      "coverage_group",
+      "cushion_bucket"
+    ],
+    [
+      "route_ran",
+      "coverage_type",
+      "coverage_group",
+      "cushion_bucket"
+    ]
+  ],
+  "prior_routes": 100,
+  "prior_players": 15,
+  "min_routes": 20,
+  "reference_rows": 34889,
+  "reference_players": 82,
+  "rookie_rows": 16844,
+  "rookie_players": 79,
+  "target_denominator": "all routes with known target, irrespective of missing separation",
+  "target_tensor_shape": "player, route/family output, metric; invalid targets zero with mask=False",
+  "source_sha256": {
+    "/Users/aidandowner/DS340BigDataBowl/data/wr_only_play.csv": "ef12f54b50c6ba9cff0cfbfbfb647c3aea2a14fdfdb52efbad7b35d1aaf54e1a",
+    "/Users/aidandowner/DS340BigDataBowl/data/wr_only_players.csv": "e2af1e58cb23a31981af5d790bb616945349a49383c5ea107c6e68b3baa47749",
+    "/Users/aidandowner/DS340BigDataBowl/nfl-big-data-bowl-2027/games.csv": "ca33543f6939af4ee393c568c60920c476ba91ddbfbdce5a06578b9492fa11fd"
+  },
+  "versions": {
+    "numpy": "2.0.2",
+    "pandas": "2.3.3"
+  }
+}

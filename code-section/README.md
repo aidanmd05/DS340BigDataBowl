@@ -41,6 +41,74 @@ Each invocation rebuilds reps, targets, the cohort, and splits from its configur
 changing an imported `CFG` alone does not update notebook-style module globals.
 Sections 11 and 12 expose Python wrappers around the same runner.
 
+## Data-only rookie contextual targets
+
+Prepare outcomes for future Combine-sequence/LSTM/attention work, without importing
+tracking, training a model, or running evaluation:
+
+```sh
+.venv/bin/python code-section/prepare_rookie_context.py
+# Use --output with a fresh directory for another run.
+.venv/bin/python -m unittest discover -s tests -p test_rookie_context.py -v
+```
+
+This standalone path reads **only** `wr_only_play.csv`, `wr_only_players.csv`, and
+`games.csv`. The reference is all regular-season WR routes from every available
+season in the WR extract, including second/third seasons and the scored players.
+Only regular-season plays with `season == draft_year` are scored. Unlike the
+predictive evaluation path below, these are pooled descriptive benchmarks, not
+fold-specific model labels. Future model evaluation must refit the reference using
+its allowed training population; these full-population scores must not be reused
+as if they had been fitted inside a split.
+
+Context is route type × defensive coverage × starting cushion. Cushion buckets
+are `[0,2)`, `[2,4)`, `[4,6)`, `[6,8)`, `[8,10)`, and `[10,infinity)` yards; unknown
+cushion and coverage have explicit categories. Small buckets borrow from route ×
+man/zone × cushion, route × cushion, and route alone. At each level the child
+weight is `n/(n+100) * min(distinct_receivers/15, 1)` by default, separately for
+separation and target observations. The route-only root has weight one.
+
+Separation percentiles (0–100) use the resulting mixture empirical distribution
+with midpoint ranks for ties. Z-scores use its mean and population standard
+deviation; zero-variance references yield a missing z-score. Target probability is
+the corresponding mixture of observed target rates. Its denominator includes all
+routes with a known target flag, **even if separation is missing**. This probability
+is a **context baseline**, not a receiver-specific prediction. Each scored route
+retains its observed target flag and its raw separation.
+
+Default outputs in `outputs/rookie_context/`:
+
+Start with [the output guide](../outputs/rookie_context/README.md) for every column,
+unit, denominator, eligibility mask and pooling level. The preparation script writes
+this guide into every new output package. The filtered reference-row copy is not
+exported because it is reproducible from the original CSVs.
+
+- `context_buckets.csv`: counts, raw separation quantiles and moments, shrinkage
+  weights, effective reference moments and expected target rates at every level.
+- `rookie_routes.csv`: rookie routes with contextual z-scores, percentiles, target
+  probabilities, bucket support, and reference levels.
+- `rookie_receiver_summary.csv`: per-receiver/per-route and per-family averages,
+  observed and expected target rates, their difference, counts and eligibility.
+- `rookie_targets.npz`: numeric `y`, boolean `mask`, and integer `counts`, each shaped
+  `(106 receivers, route/family outputs, 5 metrics)` for the current roster. Named
+  `nfl_ids`, `output_labels` and `metric_names` arrays define alignment. Missing or
+  insufficient targets are zero with `mask=False`; never train on those zeros.
+- `metadata.json`: population definitions, parameters, versions, source hashes and
+  an explicit record that no model evaluation was performed.
+
+The five array metrics are mean separation z-score, mean separation percentile,
+observed target rate, expected contextual target probability, and observed minus
+expected target rate. Prefer separation z-score and target-rate-above-expected for
+receiver-performance labels; the expected probability describes opportunity.
+Percentile averages are averages over routes, not receiver percentile rankings.
+
+The default eligibility threshold is 20 valid observations per output/metric,
+configurable with `--min-routes`. Routes with missing separation still contribute
+to target-rate summaries. All route types are retained in per-route outputs;
+FLAT/SCREEN remain excluded from the existing three family outputs. Combine
+sequence inputs remain in section 5; join the prepared outcomes by `nfl_id`, not
+by array row position. No evaluation/training commands run automatically.
+
 ## Data and evaluation contract
 
 WR extracts live in `data/`. `games.csv` must be in `data/` or
